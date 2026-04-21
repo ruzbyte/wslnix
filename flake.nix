@@ -17,11 +17,7 @@
 
   outputs = { self, nixpkgs, nixos-wsl, home-manager, ... }@inputs:
   let
-    userConfigPath = "/home/nixos/.config/nixos-wsl/user.nix";
-    userConfig = 
-      if builtins.pathExists userConfigPath
-      then import userConfigPath
-      else { username = "nixos"; email = "unset@example.com"; };
+    userConfig = builtins.fromJSON (builtins.readFile ./user.json);
   in
   {
     nixosConfigurations.wsl = nixpkgs.lib.nixosSystem {

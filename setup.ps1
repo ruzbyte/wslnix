@@ -132,42 +132,45 @@ function Bootstrap-NixOS {
     $bootstrap = @'
 set -e
 
-mkdir -p "$HOME/.config/nixos-wsl"
-
-cat > "$HOME/.config/nixos-wsl/user.nix" <<EOF
-{
-  username = "$NIXOS_USERNAME";
-  email = "$NIXOS_EMAIL";
-  hostname = "$NIXOS_HOSTNAME";
-}
-EOF
-
+# Repo klonen
 if [ ! -d "$HOME/wslnix" ]; then
   nix-shell -p git --run "git clone $NIXOS_REPO_URL $HOME/wslnix"
 fi
+
+# user.nix direkt ins Repo schreiben
+cat > "$HOME/wslnix/user.json" <<EOF
+{
+  "username": "$NIXOS_USERNAME",
+  "email": "$NIXOS_EMAIL",
+  "hostname": "$NIXOS_HOSTNAME"
+}
+EOF
+
+# Damit die Flake die Datei sieht (wegen .gitignore)
+cd "$HOME/wslnix"
+nix-shell -p git --run "git add --intent-to-add user.nix"
 
 echo "Bootstrap complete"
 '@
 
     $fullScript = $envSetup + $bootstrap
-    $fullScript = $fullScript -replace "`r`n", "`n"        # CRLF -> LF fix
+    $fullScript = $fullScript -replace "`r`n", "`n"
     $fullScript | wsl -d $DistroName -u nixos bash
 
     if ($LASTEXITCODE -ne 0) {
         throw "Bootstrap failed inside WSL"
     }
 }
-
 function First-Rebuild {
     Write-Host "Running first nixos-rebuild (this takes a few minutes)..." -ForegroundColor Cyan
 
     $rebuild = @'
 set -e
 cd "$HOME/wslnix"
-nix-shell -p git --run "sudo --preserve-env=PATH nixos-rebuild switch --flake .#wsl --option pure-eval 0"
+nix-shell -p git --run "sudo --preserve-env=PATH nixos-rebuild switch --flake .#wsl"
 '@
 
-    $rebuild = $rebuild -replace "`r`n", "`n"               # CRLF -> LF fix
+    $rebuild = $rebuild -replace "`r`n", "`n"
     $rebuild | wsl -d $DistroName -u nixos bash
 
     if ($LASTEXITCODE -ne 0) {
