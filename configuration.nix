@@ -30,7 +30,6 @@
   users.users.${userConfig.username} = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];
-    uid = 1001;
     shell = pkgs.zsh;
   };
   # This value determines the NixOS release from which the default
