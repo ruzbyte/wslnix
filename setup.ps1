@@ -148,7 +148,7 @@ EOF
 
 # Damit die Flake die Datei sieht (wegen .gitignore)
 cd "$HOME/wslnix"
-nix-shell -p git --run "git add --intent-to-add user.nix"
+nix-shell -p git --run "git add --intent-to-add user.json"
 
 echo "Bootstrap complete"
 '@
